@@ -1,0 +1,48 @@
+..........
+...#......
+..........
+....a.....
+..........
+.....a....
+..........
+......#...
+..........
+..........
+
+a1 = 3, 4
+a2 = 5, 5
+
+#1 = 1, 3
+#2 = 7, 6
+
+slopes i1 - i2 / j1 - j2
+
+a1a2 slope = 3 - 5 / 4 - 5 = -2 / -1 = 2
+a1#1 slope = 3 - 1 / 4 - 3 = 2 / 1 = 2
+a1#2 slope = 3 - 7 / 4 - 6 = -4 / -2 = 2
+a2#1 slope = 5 - 1 / 5 - 3 = 4 / 2 = 2
+a2#2 slope = 5 - 7 / 5 - 6 = -2 / -1
+#1#2 slope = 1 - 7 / 3 - 6 = -6 / -3 = 2
+
+manhattan distance |i1 - i2| + |j1 - j2|
+
+a1#1 distance = |3 - 1| + |4 - 3| = 2 + 1 = 3
+a1#2 distance = |3 - 7| + |4 - 6| = 4 + 2 = 6
+a2#1 distance = |5 - 1| + |5 - 3| = 4 + 2 = 6
+a2#2 distance = |5 - 7| + |5 - 6| = 2 + 1 = 3
+
+Algorithm
+1. calculate the slope  each pair of points with same frequency
+2. find all points that are inline with those two points (how?)
+3. check if the points are valid and they satisfy the distance requirements
+
+given a slope and two points how to find all points in line?
+
+slope = ia1 - i# / ja1 - j#
+slope = ia2 - i# / ja2 - j#
+
+ia1 - i# / ja1 - j# = ia2 - i# / ja2 - j#
+
+
+
+ 
