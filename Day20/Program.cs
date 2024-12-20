@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 string inputFile = "input.txt";
@@ -29,122 +30,65 @@ for (int y = 0; y < lines.Length; y++)
     }
 }
 
-int height = lines.Length;
-int width = lines[0].Length;
+int height = lines.Length - 1;
+int width = lines[0].Length - 1;
+int minSave = 100, cheatPeriod = 2;
+if (inputFile == "test.txt") minSave = 20;
 
-int noCheatCost = Dijkstra(start, end, walls, false);
+List<Vector2> mainPath = Race(start, end);
 
-Console.WriteLine($"No cheat cost: {noCheatCost}");
+Console.WriteLine($"No cheat cost: {mainPath.Count - 1}");
 
-int goodCheats = 0;
-int threshold = 100;
-if (inputFile == "test.txt") threshold = 20;
+Console.WriteLine($"Part1: Good cheats count: {FindGoodCheats(mainPath, minSave, cheatPeriod)}");
 
-foreach (Vector2 wall in walls)
+cheatPeriod = 20;
+Console.WriteLine($"Part 2: Good cheats count: {FindGoodCheats(mainPath, minSave, cheatPeriod)}");
+
+List<Vector2> Race(Vector2 start, Vector2 end)
 {
-    int cheatCost = Dijkstra(start, end, walls, false, noCheatCost - threshold, wall);
-    // if (cheatCost >= 0) Console.WriteLine($"{cheatCost}");
-    if (cheatCost > 0 && noCheatCost - cheatCost >= threshold) goodCheats++;
-}
-
-Console.WriteLine($"{goodCheats} cheats saved at least {threshold} picoseconds");
-
-int Dijkstra(Vector2 start, Vector2 end, HashSet<Vector2> walls, bool viz = true,
-             int maxCost = int.MaxValue, Vector2? cheat = null)
-{
-    PriorityQueue<Vector2, int> pq = new();
-    Dictionary<Vector2, Vector2> parent = new();
-    HashSet<Vector2> visited = new();
-    Dictionary<Vector2, int> cost = new();
-
-    pq.Enqueue(start, 0);
-    cost[start] = 0;
-
-    while (pq.Count > 0)
+    Vector2 current = start;
+    List<Vector2> mainPath = new();
+    mainPath.Add(current);
+    while (current != end)
     {
-        Vector2 current = pq.Dequeue();
-        if (viz) Visualize(walls, cost, current, cheat);
-        if (current == end) break;
-        if (visited.Contains(current)) continue;
-        visited.Add(current);
-        if (cost.ContainsKey(current) && cost[current] > maxCost) break;
-
-        foreach (Vector2 adj in GetAdjNodes(current, cheat))
+        foreach (Vector2 dir in directions)
         {
-            if (!cost.ContainsKey(adj)) cost[adj] = int.MaxValue;
-            int newCost = cost[current] + 1;
-
-            if (newCost < cost[adj])
+            Vector2 newNode = current + dir;
+            if (Valid(newNode) && !mainPath.Contains(newNode) && !walls.Contains(newNode))
             {
-                cost[adj] = newCost;
-                parent[adj] = current;
-                pq.Enqueue(adj, newCost);
+                current = newNode;
+                mainPath.Add(newNode);
+                break;
             }
         }
     }
-    try
-    {
-        return cost[end];
-    }
-    catch
-    {
-        return -1;
-    }
+    return mainPath;
 }
 
-List<Vector2> GetAdjNodes(Vector2 node, Vector2? cheat = null)
+int FindGoodCheats(List<Vector2> path, int minSave, int cheatPeriod)
 {
-    List<Vector2> adjNodes = new();
-    foreach (Vector2 dir in directions)
+    int goodCheats = 0;
+    for (int i = 0; i < mainPath.Count; i++)
     {
-        Vector2 newNode = node + dir;
-        if (Valid((int)newNode.X, (int)newNode.Y))
+        for (int j = i + 1; j < mainPath.Count; j++)
         {
-            if (walls.Contains(newNode) && newNode != cheat) continue;
-            adjNodes.Add(newNode);
+            int dist = ManhattanDistance(mainPath[i], mainPath[j]);
+            if (dist > cheatPeriod) continue;
+            int save = j - i - dist;
+            if (save >= minSave) goodCheats++;
         }
     }
-    return adjNodes;
+    return goodCheats;
 }
 
-bool Valid(int x, int y)
+bool Valid(Vector2 node)
 {
+    int x = (int)node.X;
+    int y = (int)node.Y;
     return x >= 0 && x <= width && y >= 0 && y <= height;
 }
 
-void Visualize(HashSet<Vector2> grid, Dictionary<Vector2, int> cost,
-                Vector2? current = null, Vector2? cheat = null, List<Vector2>? best = null)
+int ManhattanDistance(Vector2 start, Vector2 end)
 {
-    if (inputFile == "input.txt") return;
-    Console.WriteLine();
-    for (int y = 0; y <= height; y++)
-    {
-        for (int x = 0; x <= width; x++)
-        {
-            var vec = new Vector2(x, y);
-            if (current is not null && vec == current)
-                Console.BackgroundColor = ConsoleColor.Magenta;
-            if (cheat is not null && cheat == vec)
-                Console.BackgroundColor = ConsoleColor.Yellow;
-            if (vec == start) Console.BackgroundColor = ConsoleColor.Blue;
-            if (vec == end) Console.BackgroundColor = ConsoleColor.Green;
-            if (grid.Contains(vec) && cheat != vec)
-            {
-                Console.Write("[##]");
-            }
-            else if (cost.ContainsKey(vec))
-            {
-                Console.Write($"[{cost[vec].ToString("D2")}]");
-            }
-            else
-            {
-                Console.Write("[..]");
-            }
-            Console.ResetColor();
-        }
-        Console.WriteLine();
-    }
-
-    Console.ReadKey();
+    return (int)Math.Abs(start.X - end.X) + (int)Math.Abs(start.Y - end.Y);
 }
-
