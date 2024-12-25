@@ -1,4 +1,6 @@
-﻿string inputFile = "input.txt";
+﻿using System.Diagnostics;
+
+string inputFile = "input.txt";
 // inputFile = "test.txt";
 
 var lines = File.ReadAllLines(inputFile);
@@ -21,6 +23,9 @@ foreach (var ins in lines[lineIndex..])
     instructions.Enqueue(ins);
 }
 int zmax = 0;
+
+List<(string, string, string, string)> instructionsTuples = new();
+
 while (instructions.Count > 0)
 {
     string ins = instructions.Dequeue();
@@ -42,6 +47,7 @@ while (instructions.Count > 0)
     if (op == "OR") wires[output] = wires[input1] | wires[input2];
     if (op == "XOR") wires[output] = wires[input1] ^ wires[input2];
 
+    instructionsTuples.Add((input1, input2, op, output));
 }
 
 int power = 0;
@@ -53,3 +59,25 @@ for (int i = 0; i <= zmax; i++)
 }
 
 Console.WriteLine($"Part 1: {result}");
+
+CreateGraphVizFile(instructionsTuples);
+Process.Start("/bin/zsh", "-c \"/usr/bin/dot -Tpng graph.gv -o graph.png\"");
+
+// after visualizing the graph my solution is: dkr,ggk,hhh,htp,rhv,z05,z15,z20
+
+void CreateGraphVizFile(List<(string, string, string, string)> instructions)
+{
+    using (var writer = new StreamWriter("graph.gv"))
+    {
+        writer.WriteLine("digraph G\n{");
+        foreach ((string input1, string input2, string op, string output) in instructions)
+        {
+            if (op == "XOR") writer.WriteLine("    edge [color=green]");
+            else writer.WriteLine("    edge[color=blue]");
+
+            writer.WriteLine($"    {input1} -> {output}");
+            writer.WriteLine($"    {input2} -> {output}");
+        }
+        writer.WriteLine("}");
+    }
+}
